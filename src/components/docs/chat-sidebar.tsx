@@ -107,14 +107,14 @@ export function ChatSidebar() {
   };
 
   return (
-    <aside className="border-l bg-background flex flex-col">
+    <aside className="border-l bg-background flex flex-col h-full">
       <div className="p-4 border-b flex items-center justify-between">
         <h2 className="text-lg font-semibold font-headline">Чат</h2>
         <Button variant="ghost" size="icon" onClick={handleClear} aria-label="Очистить чат" disabled={!sessionId || messages.length === 0}>
           <Trash className="h-4 w-4" />
         </Button>
       </div>
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 min-h-0" ref={scrollAreaRef}>
         <div className="p-4 space-y-4">
           {messages.map((msg, index) => (
             <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
