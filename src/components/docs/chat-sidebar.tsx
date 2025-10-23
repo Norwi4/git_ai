@@ -26,7 +26,6 @@ export function ChatSidebar() {
 
   useEffect(() => {
     // A session ID can be tied to a repo, a user, etc.
-    // For this example, we'll use a repoId from the URL, but this is not secure.
     const repoId = window.location.pathname.split('/')[2] || 'default';
     const storedSessionId = localStorage.getItem(`chatSession_${repoId}`);
     const newSessionId = storedSessionId || `${repoId}-${Date.now()}`;
