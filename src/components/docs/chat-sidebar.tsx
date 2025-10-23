@@ -153,7 +153,7 @@ export function ChatSidebar() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !loading && handleSend()}
-            disabled={loading || !sessionId}
+            disabled={!sessionId}
           />
           <Button
             size="icon"
