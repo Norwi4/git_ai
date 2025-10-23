@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,26 +22,26 @@ export function ChatSidebar() {
   const [loading, setLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
-
+  const [repoId, setRepoId] = useState<string | null>(null);
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
-    // A session ID can be tied to a repo, a user, etc.
-    const repoId = window.location.pathname.split('/')[2] || 'default';
-    const storedSessionId = localStorage.getItem(`chatSession_${repoId}`);
-    const newSessionId = storedSessionId || `${repoId}-${Date.now()}`;
+    const currentRepoId = window.location.pathname.split('/')[2] || 'default';
+    setRepoId(currentRepoId);
+    const storedSessionId = localStorage.getItem(`chatSession_${currentRepoId}`);
+    const newSessionId = storedSessionId || `${currentRepoId}-${Date.now()}`;
     if (!storedSessionId) {
-      localStorage.setItem(`chatSession_${repoId}`, newSessionId);
+      localStorage.setItem(`chatSession_${currentRepoId}`, newSessionId);
     }
     setSessionId(newSessionId);
   }, []);
 
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && apiBaseUrl) {
       fetchHistory(sessionId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
-
+  }, [sessionId, apiBaseUrl]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -55,10 +55,10 @@ export function ChatSidebar() {
   const fetchHistory = async (id: string) => {
     try {
         setLoading(true);
-        const response = await fetch(`/api/chat/${id}`);
+        const response = await fetch(`${apiBaseUrl}/api/chat/${id}`);
         if(response.ok) {
             const data = await response.json();
-            setMessages(data.history);
+            setMessages(data.history || []);
         } else {
             setMessages([]);
         }
@@ -71,7 +71,7 @@ export function ChatSidebar() {
   }
 
   const handleSend = async () => {
-    if (!input.trim() || !sessionId) return;
+    if (!input.trim() || !sessionId || !apiBaseUrl || !repoId) return;
     const newUserMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, newUserMessage]);
     const currentInput = input;
@@ -79,7 +79,7 @@ export function ChatSidebar() {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/chat/${sessionId}/message`, {
+      const response = await fetch(`${apiBaseUrl}/api/chat/${sessionId}/message?repoId=${repoId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: currentInput })
@@ -96,12 +96,18 @@ export function ChatSidebar() {
   };
   
   const handleClear = async () => {
-    if (!sessionId) return;
+    if (!sessionId || !apiBaseUrl) return;
     try {
-        await fetch(`/api/chat/${sessionId}`, { method: 'DELETE' });
+        await fetch(`${apiBaseUrl}/api/chat/${sessionId}`, { method: 'DELETE' });
         setMessages([]);
     } catch (error) {
         console.error("Failed to clear chat", error);
+    }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && !loading) {
+      handleSend();
     }
   };
 
@@ -151,7 +157,7 @@ export function ChatSidebar() {
             placeholder="Спросите что-нибудь..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !loading && handleSend()}
+            onKeyDown={handleKeyDown}
             disabled={!sessionId}
           />
           <Button

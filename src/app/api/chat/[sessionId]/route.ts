@@ -1,25 +1,11 @@
+// This file is no longer used and can be removed.
+// The frontend now calls the backend API directly at http://localhost:8081.
 import { NextResponse } from 'next/server';
 
-// In-memory store for chat histories
-const chatHistories: Record<string, any[]> = {};
-
-
-export async function GET(
-  req: Request,
-  { params }: { params: { sessionId: string } }
-) {
-  const { sessionId } = params;
-  const history = chatHistories[sessionId] || [];
-  return NextResponse.json({ history });
+export async function GET(req: Request) {
+    return NextResponse.json({ error: 'This endpoint is deprecated.' }, { status: 404 });
 }
 
-export async function DELETE(
-    req: Request,
-    { params }: { params: { sessionId: string } }
-) {
-    const { sessionId } = params;
-    if (chatHistories[sessionId]) {
-        delete chatHistories[sessionId];
-    }
-    return NextResponse.json({ message: 'Chat history cleared' });
+export async function DELETE(req: Request) {
+    return NextResponse.json({ error: 'This endpoint is deprecated.' }, { status: 404 });
 }

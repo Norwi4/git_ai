@@ -8,21 +8,33 @@ import { useToast } from "@/hooks/use-toast";
 export function Header({ repoId }: { repoId: string }) {
     const [isGenerating, setIsGenerating] = useState(false);
     const { toast } = useToast();
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
     const handleGenerate = async () => {
-        setIsGenerating(true);
-        try {
-            // In a real app: await fetch(`/api/repos/${repoId}/generate-docs`, { method: 'POST' });
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            toast({
-                title: "Успех!",
-                description: "Документация успешно сгенерирована.",
-            });
-        } catch (error) {
+        if (!apiBaseUrl) {
             toast({
                 variant: "destructive",
                 title: "Ошибка",
-                description: "Не удалось сгенерировать документацию.",
+                description: "Не настроен базовый URL API.",
+            });
+            return;
+        }
+        setIsGenerating(true);
+        try {
+            const response = await fetch(`${apiBaseUrl}/api/repos/${repoId}/generate-docs`, { method: 'POST' });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            toast({
+                title: "Успех!",
+                description: "Генерация документации запущена.",
+            });
+        } catch (error) {
+            console.error("Failed to generate docs", error);
+            toast({
+                variant: "destructive",
+                title: "Ошибка",
+                description: "Не удалось запустить генерацию документации.",
             });
         } finally {
             setIsGenerating(false);

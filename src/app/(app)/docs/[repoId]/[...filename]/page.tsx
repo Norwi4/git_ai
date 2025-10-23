@@ -7,19 +7,34 @@ import { FileText } from "lucide-react";
 export default function DocFilePage({ params }: { params: { repoId: string, filename: string[] } }) {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const path = params.filename.join('/');
+    const repoId = params.repoId;
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
     useEffect(() => {
-        if (path) {
+        if (path && repoId && apiBaseUrl) {
             setLoading(true);
-            // In a real app, this would be an API call.
-            // For now, we simulate a delay and mock the content.
-            setTimeout(() => {
-                setContent(`## ${path}\n\nЭто содержимое для файла ${path}, загруженное асинхронно. В реальном приложении здесь будет отображаться содержимое файла Markdown, полученное из API.`);
-                setLoading(false);
-            }, 500);
+            setError(null);
+            fetch(`${apiBaseUrl}/api/repos/${repoId}/doc_ai/${path}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    setContent(data.content);
+                })
+                .catch(err => {
+                    console.error("Failed to fetch document:", err);
+                    setError(`Не удалось загрузить документ: ${path}`);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
         }
-    }, [path]);
+    }, [path, repoId, apiBaseUrl]);
 
     if (loading) {
         return (
@@ -30,6 +45,17 @@ export default function DocFilePage({ params }: { params: { repoId: string, file
                 </div>
             </div>
         )
+    }
+
+    if (error) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-destructive">
+                <div className="text-center">
+                    <FileText className="h-12 w-12 mx-auto mb-4" />
+                    <p>{error}</p>
+                </div>
+            </div>
+        );
     }
 
     return <MarkdownViewer content={content} />;

@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { File, Folder, Search, Loader2, ChevronRight, ChevronsUpDown } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { File, Folder, Loader2, ChevronRight, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -31,21 +30,23 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const pathname = usePathname();
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
-    fetch('/api/repos')
+    if (!apiBaseUrl) return;
+    fetch(`${apiBaseUrl}/api/repos`)
       .then(res => res.json())
       .then((data: Repo[]) => {
         setRepos(data);
         const currentRepo = data.find(r => r.id === repoId);
         setSelectedRepo(currentRepo || null);
       });
-  }, [repoId]);
+  }, [repoId, apiBaseUrl]);
 
   useEffect(() => {
-    if (selectedRepo) {
+    if (selectedRepo && apiBaseUrl) {
       setLoadingDocs(true);
-      fetch(`/api/repos/${selectedRepo.id}/doc_ai`)
+      fetch(`${apiBaseUrl}/api/repos/${selectedRepo.id}/doc_ai`)
         .then(res => res.json())
         .then((data: DocEntry[]) => {
           setDocs(data);
@@ -56,16 +57,19 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
           setLoadingDocs(false);
         });
     }
-  }, [selectedRepo]);
+  }, [selectedRepo, apiBaseUrl]);
   
   useEffect(() => {
-    const storedState = localStorage.getItem(`expandedFolders_${repoId}`);
-    if (storedState) {
-      setExpandedFolders(JSON.parse(storedState));
+    if (repoId) {
+      const storedState = localStorage.getItem(`expandedFolders_${repoId}`);
+      if (storedState) {
+        setExpandedFolders(JSON.parse(storedState));
+      }
     }
   }, [repoId]);
 
   const toggleFolder = (path: string) => {
+    if (!repoId) return;
     const newExpandedFolders = expandedFolders.includes(path)
       ? expandedFolders.filter(p => p !== path)
       : [...expandedFolders, path];
