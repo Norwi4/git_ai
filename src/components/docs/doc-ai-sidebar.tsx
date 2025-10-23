@@ -40,9 +40,9 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
   }, [repoId, apiBaseUrl]);
 
   useEffect(() => {
-    if (selectedRepo && apiBaseUrl) {
+    if (repoId && apiBaseUrl) {
       setLoadingDocs(true);
-      fetch(`${apiBaseUrl}/api/repos/${selectedRepo.id}/doc_ai`)
+      fetch(`${apiBaseUrl}/api/repos/${repoId}/doc_ai`)
         .then(res => res.json())
         .then((data: DocEntry[]) => {
           setDocs(data);
@@ -53,7 +53,7 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
           setLoadingDocs(false);
         });
     }
-  }, [selectedRepo, apiBaseUrl]);
+  }, [repoId, apiBaseUrl]);
   
   useEffect(() => {
     if (repoId) {
@@ -139,13 +139,14 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
                             {repos.map((repo) => (
                                 <CommandItem
                                     key={repo.id}
-                                    value={repo.id.toString()}
+                                    value={repo.name}
                                     onSelect={(currentValue) => {
-                                        const repo = repos.find(r => r.id.toString() === currentValue);
-                                        setSelectedRepo(repo || null);
-                                        setOpen(false);
-                                        // Navigate to the new repo's doc page
-                                        window.location.href = `/docs/${currentValue}`;
+                                        const repo = repos.find(r => r.name.toLowerCase() === currentValue.toLowerCase());
+                                        if (repo) {
+                                            setSelectedRepo(repo);
+                                            setOpen(false);
+                                            window.location.href = `/docs/${repo.id}`;
+                                        }
                                     }}
                                 >
                                     {repo.name}
