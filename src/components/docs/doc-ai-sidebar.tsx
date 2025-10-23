@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
+import { Repository } from "@/lib/types";
 
 type DocEntry = {
     name: string;
@@ -16,15 +17,10 @@ type DocEntry = {
     children?: DocEntry[];
 };
 
-type Repo = {
-    id: string;
-    name: string;
-};
-
 export function DocAiSidebar({ repoId }: { repoId: string }) {
-  const [repos, setRepos] = useState<Repo[]>([]);
+  const [repos, setRepos] = useState<Repository[]>([]);
   const [open, setOpen] = useState(false);
-  const [selectedRepo, setSelectedRepo] = useState<Repo | null>(null);
+  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   
   const [docs, setDocs] = useState<DocEntry[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -36,9 +32,9 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
     if (!apiBaseUrl) return;
     fetch(`${apiBaseUrl}/api/repos`)
       .then(res => res.json())
-      .then((data: Repo[]) => {
+      .then((data: Repository[]) => {
         setRepos(data);
-        const currentRepo = data.find(r => r.id === repoId);
+        const currentRepo = data.find(r => r.id.toString() === repoId);
         setSelectedRepo(currentRepo || null);
       });
   }, [repoId, apiBaseUrl]);
@@ -143,9 +139,9 @@ export function DocAiSidebar({ repoId }: { repoId: string }) {
                             {repos.map((repo) => (
                                 <CommandItem
                                     key={repo.id}
-                                    value={repo.id}
+                                    value={repo.id.toString()}
                                     onSelect={(currentValue) => {
-                                        const repo = repos.find(r => r.id === currentValue);
+                                        const repo = repos.find(r => r.id.toString() === currentValue);
                                         setSelectedRepo(repo || null);
                                         setOpen(false);
                                         // Navigate to the new repo's doc page

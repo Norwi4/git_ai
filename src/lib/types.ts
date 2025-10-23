@@ -1,16 +1,8 @@
 export type Repository = {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  language: string;
-  stars: number;
-  forks: number;
-  lastUpdated: string;
-  lastActivity?: string;
-  owner: {
-    name:string;
-    avatarUrl: string;
-  };
+  path_with_namespace: string;
+  web_url: string;
 };
 
 export type FileNode = {
