@@ -16,35 +16,32 @@ type Message = {
     action?: any;
 }
 
-const mockHistory: Message[] = [
-    { role: 'user', content: 'Объясни, за что отвечает модуль auth' },
-    { 
-        role: 'assistant', 
-        content: 'Модуль auth отвечает за регистрацию и JWT-токены.',
-        type: 'text'
-    },
-    { role: 'user', content: 'Создай обзорный файл по архитектуре' },
-    {
-        role: 'assistant',
-        content: "Я создала новый файл [overview.md](/docs/gitlab-navigator/overview.md)",
-        type: "action",
-        action: {
-          name: "create_file",
-          params: {"path": "doc_ai/overview.md"},
-        }
-    }
-]
-
 export function ChatSidebar() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
 
   useEffect(() => {
-    // In a real app, fetch chat history
-    setMessages(mockHistory);
+    // A session ID can be tied to a repo, a user, etc.
+    // For this example, we'll use a repoId from the URL, but this is not secure.
+    const repoId = window.location.pathname.split('/')[2] || 'default';
+    const storedSessionId = localStorage.getItem(`chatSession_${repoId}`);
+    const newSessionId = storedSessionId || `${repoId}-${Date.now()}`;
+    if (!storedSessionId) {
+      localStorage.setItem(`chatSession_${repoId}`, newSessionId);
+    }
+    setSessionId(newSessionId);
   }, []);
+
+  useEffect(() => {
+    if (sessionId) {
+      fetchHistory(sessionId);
+    }
+  }, [sessionId]);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -55,32 +52,64 @@ export function ChatSidebar() {
     }
   }, [messages]);
 
+  const fetchHistory = async (id: string) => {
+    try {
+        setLoading(true);
+        const response = await fetch(`/api/chat/${id}`);
+        if(response.ok) {
+            const data = await response.json();
+            setMessages(data.history);
+        } else {
+            setMessages([]);
+        }
+    } catch (error) {
+        console.error("Failed to fetch chat history", error);
+        setMessages([]);
+    } finally {
+        setLoading(false);
+    }
+  }
+
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !sessionId) return;
     const newUserMessage: Message = { role: 'user', content: input };
     setMessages(prev => [...prev, newUserMessage]);
+    const currentInput = input;
     setInput("");
     setLoading(true);
 
-    // Simulate API call to POST /api/chat/{sessionId}/message
-    setTimeout(() => {
-        // Mock response
-        const assistantResponse: Message = { role: 'assistant', content: `Это симуляция ответа на: "${input}"` };
-        setMessages(prev => [...prev, assistantResponse]);
+    try {
+      const response = await fetch(`/api/chat/${sessionId}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: currentInput })
+      });
+      const assistantResponse = await response.json();
+      setMessages(prev => [...prev, assistantResponse]);
+    } catch(error) {
+        console.error("Failed to send message", error);
+        const errorResponse: Message = { role: 'assistant', content: 'Извините, произошла ошибка.' };
+        setMessages(prev => [...prev, errorResponse]);
+    } finally {
         setLoading(false);
-    }, 1000);
+    }
   };
   
-  const handleClear = () => {
-    // Call DELETE /api/chat/{sessionId}
-    setMessages([]);
+  const handleClear = async () => {
+    if (!sessionId) return;
+    try {
+        await fetch(`/api/chat/${sessionId}`, { method: 'DELETE' });
+        setMessages([]);
+    } catch (error) {
+        console.error("Failed to clear chat", error);
+    }
   };
 
   return (
     <aside className="border-l bg-background flex flex-col">
       <div className="p-4 border-b flex items-center justify-between">
         <h2 className="text-lg font-semibold font-headline">Чат</h2>
-        <Button variant="ghost" size="icon" onClick={handleClear} aria-label="Очистить чат">
+        <Button variant="ghost" size="icon" onClick={handleClear} aria-label="Очистить чат" disabled={!sessionId || messages.length === 0}>
           <Trash className="h-4 w-4" />
         </Button>
       </div>
@@ -95,12 +124,12 @@ export function ChatSidebar() {
                             <CardTitle className="text-sm flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Действие выполнено</CardTitle>
                         </CardHeader>
                         <CardContent className="p-3 pt-0">
-                           <p className="text-sm">
+                           <span className="text-sm">
                                 Создан файл:{' '}
                                 <Link href={`/docs/gitlab-navigator/${msg.action.params.path.replace('doc_ai/','')}`} className="underline">
                                     <Badge variant="secondary">{msg.action.params.path.split('/')[1]}</Badge>
                                 </Link>
-                           </p>
+                           </span>
                         </CardContent>
                     </Card>
                 ) : <p className="text-sm">{msg.content}</p> }
@@ -123,14 +152,14 @@ export function ChatSidebar() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !loading && handleSend()}
-            disabled={loading}
+            disabled={loading || !sessionId}
           />
           <Button
             size="icon"
             variant="ghost"
             className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
             onClick={handleSend}
-            disabled={!input.trim() || loading}
+            disabled={!input.trim() || loading || !sessionId}
           >
             <Send className="h-4 w-4" />
           </Button>
