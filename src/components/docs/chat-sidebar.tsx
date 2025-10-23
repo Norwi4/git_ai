@@ -40,6 +40,7 @@ export function ChatSidebar() {
     if (sessionId) {
       fetchHistory(sessionId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
 
