@@ -18,7 +18,7 @@ export default function DocsLayout({
         <main className="flex flex-col overflow-auto">
             {children}
         </main>
-        <div className="hidden md:flex">
+        <div className="hidden md:flex flex-col">
           <ChatSidebar />
         </div>
       </div>
