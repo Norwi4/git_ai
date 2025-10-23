@@ -114,7 +114,7 @@ export function ChatSidebar() {
           <Trash className="h-4 w-4" />
         </Button>
       </div>
-      <ScrollArea className="flex-1 min-h-0" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="p-4 space-y-4">
           {messages.map((msg, index) => (
             <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
