@@ -1,14 +1,5 @@
-import { PageHeader } from "@/components/page-header";
-import { CodeAssistant } from "@/components/assistant/code-assistant";
+import { redirect } from "next/navigation";
 
 export default function AssistantPage() {
-  return (
-    <div className="animate-in fade-in-50">
-      <PageHeader
-        title="AI Code Assistant"
-        description="Get inline code suggestions and assistance."
-      />
-      <CodeAssistant />
-    </div>
-  );
+  redirect('/docs/gitlab-navigator');
 }
