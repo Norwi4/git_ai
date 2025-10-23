@@ -1,5 +1,6 @@
 import type { Repository, FileNode, Commit, Branch, Issue } from './types';
 
+// This data is now fetched from the API, but kept for reference or fallback.
 export const repositories: Repository[] = [
   {
     id: 'gitlab-navigator',
@@ -9,6 +10,7 @@ export const repositories: Repository[] = [
     stars: 123,
     forks: 45,
     lastUpdated: '3 hours ago',
+    lastActivity: '2025-10-22T13:32:00Z',
     owner: { name: 'user', avatarUrl: 'https://picsum.photos/seed/user/40/40' },
   },
   {
@@ -19,6 +21,7 @@ export const repositories: Repository[] = [
     stars: 5432,
     forks: 987,
     lastUpdated: '1 day ago',
+    lastActivity: '2025-10-20T18:45:00Z',
     owner: { name: 'user', avatarUrl: 'https://picsum.photos/seed/user/40/40' },
   },
   {
@@ -29,6 +32,7 @@ export const repositories: Repository[] = [
     stars: 5,
     forks: 1,
     lastUpdated: '5 days ago',
+    lastActivity: '2025-10-19T10:00:00Z',
     owner: { name: 'user', avatarUrl: 'https://picsum.photos/seed/user/40/40' },
   },
 ];
@@ -64,3 +68,26 @@ export const issues: Issue[] = [
   { id: 21, title: 'Add integration tests for payment flow', state: 'open', author: 'User', labels: ['testing', 'critical'], createdAt: '3 weeks ago' },
   { id: 15, title: 'Improve database query performance', state: 'open', author: 'Another User', labels: ['performance', 'database'], createdAt: '1 month ago' },
 ];
+
+export const mockApiDocs = {
+  "gitlab-navigator": [
+    { name: "architecture.md", path: "doc_ai/architecture.md", type: 'file' as const },
+    { name: "api_overview.md", path: "doc_ai/api_overview.md", type: 'file' as const },
+    { name: "getting-started", path: "doc_ai/getting-started", type: 'folder' as const, children: [
+      { name: "installation.md", path: "doc_ai/getting-started/installation.md", type: 'file' as const },
+      { name: "configuration.md", path: "doc_ai/getting-started/configuration.md", type: 'file' as const },
+    ]},
+  ],
+  "awesome-project": [
+    { name: "README.md", path: "doc_ai/README.md", type: 'file' as const },
+  ],
+  "dotfiles": []
+};
+
+export const mockFileContent = {
+  "architecture.md": "## Architecture\n\nThis is the architecture file for gitlab-navigator.",
+  "api_overview.md": "## API Overview\n\nThis is the API overview for gitlab-navigator.",
+  "getting-started/installation.md": "## Installation\n\nHow to install.",
+  "getting-started/configuration.md": "## Configuration\n\nHow to configure.",
+  "README.md": "## Readme\n\nReadme for awesome-project."
+}

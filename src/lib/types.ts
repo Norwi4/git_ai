@@ -6,8 +6,9 @@ export type Repository = {
   stars: number;
   forks: number;
   lastUpdated: string;
+  lastActivity?: string;
   owner: {
-    name: string;
+    name:string;
     avatarUrl: string;
   };
 };
@@ -15,8 +16,10 @@ export type Repository = {
 export type FileNode = {
   type: 'file' | 'folder';
   name: string;
-  commit: string;
-  lastUpdated: string;
+  path: string;
+  commit?: string;
+  lastUpdated?: string;
+  children?: FileNode[];
 };
 
 export type Commit = {
